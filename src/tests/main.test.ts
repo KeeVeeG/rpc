@@ -1,6 +1,5 @@
 // @ts-nocheck
-import { rpcMaster } from '../master'
-import { rpcWorker } from '../worker'
+import { rpcMaster, rpcWorker } from '../'
 
 const master = new rpcMaster()
 const worker1 = new rpcWorker()
