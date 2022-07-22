@@ -19,8 +19,16 @@ describe('main', () => {
 
   test('exec', async () => {
     const sum = (a, b) => a + b
-    const result = await master.exec(sum, 1, 2)
-    expect(result).toEqual(3)
+    const { data } = await master.exec(sum, 1, 2)
+    expect(data).toEqual(3)
+  })
+
+  test('get error', async () => {
+    const func = () => {
+      throw new Error()
+    }
+    const result = await master.exec(func)
+    expect(result.error).toBeDefined()
   })
 
   test('connect one more worker', async () => {
@@ -39,8 +47,8 @@ describe('main', () => {
       const { v4 } = await import('uuid')
       return v4()
     }
-    const result = await master.exec(func)
-    expect(result.length).toEqual(36)
+    const { data } = await master.exec(func)
+    expect(data.length).toEqual(36)
   })
 
   test('exec async with module', async () => {
@@ -49,7 +57,7 @@ describe('main', () => {
       const { status } = await axios.get(url)
       return status
     }
-    const result = await master.exec(func, 'https://github.com/KeeVeeG')
-    expect(result).toEqual(200)
+    const { data } = await master.exec(func, 'https://github.com/KeeVeeG')
+    expect(data).toEqual(200)
   })
 })

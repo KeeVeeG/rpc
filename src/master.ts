@@ -76,7 +76,7 @@ export class rpcMaster extends Abstract {
         this._sockets.forEach(instance => {
           instance.socket.once('added-function-' + hash, () => {
             const operation = this.operaion++
-            instance.socket.once('result-' + operation, ({ result }) => {
+            instance.socket.once('result-' + operation, result => {
               instance.process--
               resolve(result)
             })
@@ -89,7 +89,7 @@ export class rpcMaster extends Abstract {
         const min = this._sockets.reduce((min, { process }) => Math.min(min, process), Infinity)
         const instance = this._sockets.find(({ process }) => process === min) as SocketInstance
         const operation = this.operaion++
-        instance.socket.once('result-' + operation, ({ result }) => {
+        instance.socket.once('result-' + operation, result => {
           instance.process--
           resolve(result)
         })

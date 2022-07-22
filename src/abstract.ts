@@ -4,7 +4,7 @@ import { Socket as SockerClient } from 'socket.io-client'
 type Socket = SockerServer | SockerClient
 
 export class Abstract {
-  public sockets: {
+  protected sockets: {
     [key: string]: {
       socket: Socket
     }

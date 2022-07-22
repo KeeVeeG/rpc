@@ -42,8 +42,12 @@ export class rpcWorker extends Abstract {
         await new Promise<void>(resolve => resolve())
         func = this.functions[hash]
       }
-      const result = await func(...args)
-      socket.emit('result-' + operation, { result })
+      try {
+        const data = await func(...args)
+        socket.emit('result-' + operation, { data })
+      } catch (error) {
+        socket.emit('result-' + operation, { error })
+      }
     })
   }
 
