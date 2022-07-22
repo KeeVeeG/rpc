@@ -1,6 +1,6 @@
 {
   "name": "@keeveeg/rpc",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Remote Procedure Call (RPC)",
   "main": "lib/index.js",
   "types": "lib/index",
