@@ -5,6 +5,8 @@ const master = new rpcMaster()
 const worker1 = new rpcWorker()
 const worker2 = new rpcWorker(44442)
 
+const sum = (a, b) => a + b
+
 describe('main', () => {
   test('connect worker', async () => {
     const id = await master.addWorker()
@@ -18,8 +20,7 @@ describe('main', () => {
   }, 10000)
 
   test('exec', async () => {
-    const sum = (a, b) => a + b
-    const { data } = await master.exec(sum, 1, 2)
+    const { data } = await master.exec<number>(sum, 1, 2)
     expect(data).toEqual(3)
   })
 
@@ -36,6 +37,15 @@ describe('main', () => {
     expect(worker2.sockets[id]).toBeDefined()
   })
 
+  test('call not exists func', async () => {
+    const promises: Promise<any> = []
+    for (let i = 0; i < 10; i++) {
+      promises.push(master.exec<number>(sum, 2, 3))
+    }
+    const results = await Promise.all(promises)
+    expect(results.every(({ data }) => data === 5)).toBeTruthy()
+  })
+
   test('add one more module', async () => {
     const module = 'axios'
     await master.addModule(module)
@@ -47,7 +57,7 @@ describe('main', () => {
       const { v4 } = await import('uuid')
       return v4()
     }
-    const { data } = await master.exec(func)
+    const { data } = await master.exec<string>(func)
     expect(data.length).toEqual(36)
   })
 
@@ -57,7 +67,7 @@ describe('main', () => {
       const { status } = await axios.get(url)
       return status
     }
-    const { data } = await master.exec(func, 'https://github.com/KeeVeeG')
+    const { data } = await master.exec<number>(func, 'https://github.com/KeeVeeG')
     expect(data).toEqual(200)
   })
 })

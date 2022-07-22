@@ -31,20 +31,34 @@ export class rpcMaster extends Abstract {
     return new Promise<string>(resolve => {
       const socket = io((host || 'http://localhost') + ':' + (port || 44441))
       socket.on('connect', () => {
+        const tryResolve = () => {
+          if (
+            this.sockets[socket.id].modules.size === this.modules.size &&
+            this.sockets[socket.id].functions.size === Object.keys(this.functions).length
+          ) {
+            resolve(socket.id)
+          }
+        }
         this.addSocket(socket)
         if (this.modules.size) {
           this.modules.forEach(id => {
             socket.once('added-module-' + id, () => {
               this.sockets[socket.id].modules.add(id)
-              if (this.sockets[socket.id].modules.size === this.modules.size) {
-                resolve(socket.id)
-              }
+              tryResolve()
             })
             socket.emit('add-module', id)
           })
         } else {
-          resolve(socket.id)
+          tryResolve()
         }
+        Object.entries(this.functions).forEach(([hash, func]) => {
+          socket.once('added-function-' + hash, () => {
+            this.sockets[socket.id].functions.add(hash)
+            tryResolve()
+          })
+          const source = func.toString()
+          socket.emit('add-function', { hash, source })
+        })
       })
       socket.on('connect_error', error => {
         console.error(error)
@@ -67,18 +81,19 @@ export class rpcMaster extends Abstract {
     })
   }
 
-  public exec(func: Function, ...args: any[]) {
-    return new Promise<any>(resolve => {
+  public exec<d = any>(func: Function, ...args: any[]) {
+    return new Promise<{ data?: d; error?: Error; socket: string }>(resolve => {
       const source = func.toString()
       const hash = crypto.createHash('md5').update(source).digest('hex')
       if (!this.functions[hash]) {
         this.functions[hash] = func
         this._sockets.forEach(instance => {
           instance.socket.once('added-function-' + hash, () => {
+            instance.functions.add(hash)
             const operation = this.operaion++
             instance.socket.once('result-' + operation, result => {
               instance.process--
-              resolve(result)
+              resolve({ ...result, socket: instance.socket.id })
             })
             instance.process++
             instance.socket.emit('exec', { hash, operation, args })
@@ -91,7 +106,7 @@ export class rpcMaster extends Abstract {
         const operation = this.operaion++
         instance.socket.once('result-' + operation, result => {
           instance.process--
-          resolve(result)
+          resolve({ ...result, socket: instance.socket.id })
         })
         instance.process++
         instance.socket.emit('exec', { hash, operation, args })
