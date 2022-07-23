@@ -1,2 +1,2 @@
-export * from './master'
-export * from './worker'
+export { rpcMaster } from './master'
+export { rpcWorker } from './worker'

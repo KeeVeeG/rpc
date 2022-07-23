@@ -45,8 +45,8 @@ export class rpcWorker extends Abstract {
       try {
         const data = await func(...args)
         socket.emit('result-' + operation, { data })
-      } catch (error) {
-        socket.emit('result-' + operation, { error })
+      } catch ({message}) {
+        socket.emit('result-' + operation, { error: message })
       }
     })
   }
